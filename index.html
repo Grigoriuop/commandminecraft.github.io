@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minecraft — коллекция команд</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f5f1;--card:#fff;--tx:#1b2418;--mu:#5d6b58;--ac:#3f9b3a;--ac2:#2e7a2a;--bd:#d8dfd3;--code:#101611;--codetx:#b9f0b0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1410;--card:#182019;--tx:#e8f0e4;--mu:#93a38d;--ac:#5fd155;--ac2:#4bb842;--bd:#27332a;--code:#0a0e0b;--codetx:#b9f0b0}}
+:root[data-theme="dark"]{--bg:#0f1410;--card:#182019;--tx:#e8f0e4;--mu:#93a38d;--ac:#5fd155;--ac2:#4bb842;--bd:#27332a;--code:#0a0e0b;--codetx:#b9f0b0}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:860px;margin:0 auto;padding:20px 14px 60px}
+h1{font-size:26px;margin:6px 0 4px}
+.sub{color:var(--mu);margin:0 0 16px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0;display:grid;gap:8px}
+input{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit}
+label{font-size:13px;color:var(--mu);display:block;margin-bottom:3px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tab{flex:none;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:7px 13px;border-radius:99px;font:inherit;cursor:pointer}
+.tab.on{background:var(--ac);color:#08140a;border-color:var(--ac);font-weight:600}
+.sec{display:flex;justify-content:space-between;align-items:center;margin:24px 0 8px}
+.sec h2{font-size:18px;margin:0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 4px;font-size:16px}
+.card p{margin:0 0 10px;color:var(--mu);font-size:14px}
+pre{margin:0 0 10px;background:var(--code);color:var(--codetx);border-radius:10px;padding:10px;max-height:92px;overflow:auto;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all}
+.btn{border:0;background:var(--ac);color:#08140a;font:inherit;font-weight:600;padding:9px 16px;border-radius:10px;cursor:pointer}
+.btn:active{background:var(--ac2)}
+.btn.s{background:transparent;color:var(--ac);border:1px solid var(--ac);padding:6px 12px;font-size:13px}
+.btn.ok{background:#e0a800;color:#201700}
+.empty{color:var(--mu);text-align:center;padding:30px}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>⛏️ Команды Minecraft</h1>
+<p class="sub">Нажми «Копировать» и вставь в чат игры. Команды выдаются игроку с ником ниже.</p>
+<div class="bar">
+<div><label for="nick">Ник игрока</label><input id="nick" value="fdvh_7th7" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+<input id="q" placeholder="Поиск по названию…" type="search">
+<div class="tabs" id="tabs"></div>
+</div>
+<div id="list"></div>
+</div>
+<script>
+var NICK="fdvh_7th7";
+function fx(s){return s.split(",").map(function(e){var p=e.split(":");return '{id:"minecraft:'+p[0]+'",duration:'+p[1]+(p[2]?',amplifier:'+p[2]:'')+'}'}).join(",")}
+function nm(n,c){return '{"text":"'+n+'"'+(c?',color:"'+c+'"':'')+'}'}
+function lo(l){return l?',minecraft:lore=[{text:"'+l[0]+'",color:"gray"},{text:"'+l[1]+'",color:"aqua"}]':''}
+function eat(item,n,c,l,e,no64){return 'minecraft:'+item+'[minecraft:max_stack_size=64,minecraft:food={nutrition:20,saturation:20,can_always_eat:true},minecraft:consumable={consume_seconds:1.6,animation:"eat",sound:"minecraft:entity.generic.eat",has_consume_particles:true,on_consume_effects:[{type:"minecraft:apply_effects",effects:['+fx(e)+']}]},minecraft:custom_name='+nm(n,c)+lo(l)+']'+(no64?'':' 64')}
+function spl(model,n,c,l,e){return 'minecraft:splash_potion[minecraft:item_model="minecraft:'+model+'",minecraft:potion_contents={potion:"minecraft:mundane",custom_effects:['+fx(e)+']},minecraft:custom_name='+nm(n,c)+lo(l)+']'}
+function arm(item,en,n,trim){var s=en.split(",").map(function(x){var p=x.split(":");return '"minecraft:'+p[0]+'":'+p[1]}).join(",");return 'minecraft:'+item+'[enchantments={'+s+'}'+(trim?',trim={pattern:"minecraft:silence",material:"minecraft:diamond"}':'')+',custom_name={"text":"'+n+'"}]'}
+var HULK="strength:6000:4,resistance:6000:3,jump_boost:6000:2,regeneration:6000:2,haste:6000:2,absorption:6000:4,speed:6000:1";
+var A3="Съешь — и получи на 3 минуты:",T1="Кинь — враг получит на 1 минуту:";
+var CATS=[["Броня","🛡️"],["Съедобные предметы","🍎"],["Бросаемые зелья","🧪"],["Бонус","⭐"],["EssentialsX","🧰"],["EssentialsXSpawn","🏠"],["LuckPerms","🔑"],["WorldEdit","🪄"],["WorldGuard","🛑"],["PvPManager","⚔️"],["ClearLag","🧹"],["rtp","🎲"],["SkinsRestorer","👤"],["PlayerAuctions","💰"],["sCheckPlayer","🔍"],["Ваниль: игрок","🎮"],["Ваниль: мир","🌍"],["Ваниль: блоки и мобы","🧱"],["Ваниль: сервер","🖥️"]];
+var D=[
+[0,"Незеритовый шлем","Защита IV, Дыхание III, Родство с водой, Прочность III, Починка. Отделка «Молчание».",function(){return arm("netherite_helmet","protection:4,respiration:3,aqua_affinity:1,unbreaking:3,mending:1","Незеритовый шлем",1)}],
+[0,"Незеритовый нагрудник","Защита IV, Прочность III, Починка.",function(){return arm("netherite_chestplate","protection:4,unbreaking:3,mending:1","Незеритовый нагрудник",1)}],
+[0,"Незеритовые поножи","Защита IV, Прочность III, Починка.",function(){return arm("netherite_leggings","protection:4,unbreaking:3,mending:1","Незеритовые поножи",1)}],
+[0,"Незеритовые ботинки","Защита IV, Невесомость IV, Подводная ходьба III, Скорость души III, Прочность, Починка.",function(){return arm("netherite_boots","protection:4,feather_falling:4,depth_strider:3,soul_speed:3,unbreaking:3,mending:1","Незеритовые ботинки",1)}],
+[0,"Элитра","Крылья для полёта. Прочность III и Починка.",function(){return arm("elytra","unbreaking:3,mending:1","Элитра",0)}],
+[1,"Топор берсерка","На 3 минуты: Сила IV, Скорость III, Спешка III.",function(){return eat("diamond_axe","Топор берсерка","red",[A3,"Сила IV, Скорость III, Спешка III"],"strength:3600:3,speed:3600:2,haste:3600:2")}],
+[1,"Алмаз ярости","Сопротивление IV, Поглощение V, Сила III на 3 минуты.",function(){return eat("diamond","Алмаз ярости","aqua",[A3,"Сопротивление IV, Поглощение V, Сила III"],"resistance:3600:3,absorption:3600:4,strength:3600:2")}],
+[1,"Кирка шахтёра","Спешка IV и Ночное зрение — для шахт.",function(){return eat("iron_pickaxe","Кирка шахтёра","gold",[A3,"Спешка IV, Ночное зрение"],"haste:3600:3,night_vision:3600")}],
+[1,"Яйцо драконоборца","Огнестойкость, Регенерация III, Сила III.",function(){return eat("dragon_egg","Яйцо драконоборца","light_purple",[A3,"Огнестойкость, Реген III, Сила III"],"fire_resistance:3600,regeneration:3600:2,strength:3600:2")}],
+[1,"Яблоко титана","5 минут почти бессмертия: Реген III, Сопротивление III, Поглощение V, Сила III.",function(){return eat("golden_apple","Яблоко титана","gold",["Съешь — и получи на 5 минут:","Реген III, Сопротивление III, Поглощение V, Сила III"],"regeneration:6000:2,resistance:6000:2,absorption:6000:4,strength:6000:2")}],
+[1,"Щит из драконьей чешуи","Танковый баф на 4 минуты: Сопротивление IV, Поглощение VI, Реген III, Огнестойкость.",function(){return eat("dragon_scale","Щит из драконьей чешуи","dark_red",["Съешь — и стань почти неубиваемым на 4 минуты","Сопротивление IV, Поглощение VI, Реген III, Огнестойкость"],"resistance:4800:3,absorption:4800:5,regeneration:4800:2,fire_resistance:4800")}],
+[1,"Сердце моря","Дыхание под водой, Благодать дельфина, Реген III, Скорость III на 5 минут.",function(){return eat("heart_of_the_sea","Сердце моря","blue",["Съешь — и покоряй глубины 5 минут","Дыхание под водой, Благодать дельфина, Реген III, Скорость III"],"water_breathing:6000,dolphins_grace:6000,regeneration:6000:2,speed:6000:2")}],
+[1,"Зов героя","Герой деревни, Удача IV, Спешка IV на 5 минут.",function(){return eat("banner","Зов героя","gold",["Съешь — и стань любимцем деревни на 5 минут","Герой деревни, Удача IV, Спешка IV"],"hero_of_the_village:6000,luck:6000:3,haste:6000:3")}],
+[1,"Кристалл ветра","Прыгучесть IV, Плавное падение, Скорость IV на 5 минут.",function(){return eat("amethyst_shard","Кристалл ветра","light_purple",["Съешь — и летай по миру 5 минут","Прыгучесть IV, Плавное падение, Скорость IV"],"jump_boost:6000:3,slow_falling:6000,speed:6000:3")}],
+[1,"Зелье «я в домике»","Защита, запасные сердца и реген на 3 минуты. Не стакается.",function(){return eat("lodestone","Зелье «я в домике»","pink",["Съешь — и посиди в безопасности 3 минуты","Сопротивление IV, Поглощение V, Реген III"],"resistance:3600:3,absorption:3600:4,regeneration:3600:2",1)}],
+[2,"Меч тени","Выглядит как меч. Враг получает Тьму, Слабость, Замедление III.",function(){return spl("iron_sword","Меч тени","dark_gray",["Кинь — враг получит:","Тьма, Слабость, Замедление III"],"darkness:400,weakness:600,slowness:600:2")}],
+[2,"Жемчуг охотника","Выглядит как жемчуг Края. Замедление IV и Слабость на минуту.",function(){return spl("ender_pearl","Жемчуг охотника","dark_purple",[T1,"Замедление IV, Слабость"],"slowness:1200:3,weakness:1200")}],
+[2,"Снежок ледяной тюрьмы","Замедление X и Усталость V — враг не ходит и не копает.",function(){return spl("snowball","Снежок ледяной тюрьмы","aqua",[T1,"Замедление X, Усталость V"],"slowness:1200:9,mining_fatigue:1200:4")}],
+[2,"Глаз эндера-паралитика","Слепота, Замедление IV, Слабость.",function(){return spl("ender_eye","Глаз эндера-паралитика","purple",["Кинь — враг ослепнет и замедлится на 1 минуту","Слепота, Замедление IV, Слабость"],"blindness:400,slowness:1200:3,weakness:1200")}],
+[2,"Паучий кокон","Враг как статуя на минуту, плюс Тошнота.",function(){return spl("cobweb","Паучий кокон","dark_green",["Кинь — враг не сможет ни бежать, ни копать","Замедление X, Усталость V, Тошнота"],"slowness:1200:9,mining_fatigue:1200:4,nausea:600")}],
+[2,"Яд болотной ведьмы","Отравление IV + Иссушение III + Слабость.",function(){return spl("pufferfish","Яд болотной ведьмы","dark_aqua",["Кинь — враг будет терять здоровье и слабеет","Отравление IV, Иссушение III, Слабость"],"poison:1200:3,wither:1200:2,weakness:1200")}],
+[2,"Зелье «я не виноват»","Розыгрыш: Тошнота, Слепота, Замедление III.",function(){return spl("rotten_flesh","Зелье «я не виноват»","orange",["Кинь — и пусть все думают, что это баг","Тошнота, Слепота, Замедление III"],"nausea:600,blindness:400,slowness:1200:2")}],
+[2,"Зелье «я просто мимо проходил»","Невидимость и Скорость IV на 10 секунд. Работает и на себя.",function(){return spl("rabbit_foot","Зелье «я просто мимо проходил»","lime",["Кинь — и исчезни на 10 секунд","Невидимость, Скорость IV"],"invisibility:600,speed:600:3")}],
+[2,"Зелье «это не я»","Слабость, Усталость IV, Слепота.",function(){return spl("spider_eye","Зелье «это не я»","dark_gray",["Кинь — и пусть враг сам себя обвинит","Слабость, Усталость IV, Слепота"],"weakness:1200,mining_fatigue:1200:3,blindness:400")}],
+[3,"Зелье Халка","Настоящее зелье (зелёное): 7 эффектов на 5 минут.",function(){return 'minecraft:potion[minecraft:potion_contents={potion:"minecraft:mundane",custom_color:5636095,custom_effects:['+fx(HULK)+']},minecraft:custom_name={"text":"Зелье Халка"}]'}],
+[3,"Тростник Халка","Тот же баф Халка, но тростник — съедаешь. Стакается по 64.",function(){return eat("sugar_cane","Тростник Халка",0,0,HULK)}],
+[3,"Тростник-бомба","Кидаешь в друга — у него «режим Халка».",function(){return spl("sugar_cane","Тростник-бомба",0,0,HULK)}],
+[3,"Снежок зла","Иссушение, Отравление, Замедление, Слабость, Тьма разом.",function(){return spl("snowball","Снежок зла",0,0,"wither:600:1,poison:600:1,slowness:1200:2,weakness:1200,darkness:400")}],
+[3,"Железный слиток мощи","10 эффектов на полторы минуты.",function(){return eat("iron_ingot","Железный слиток мощи",0,0,"regeneration:1800:4,resistance:1800:3,strength:1800:4,speed:1800:3,absorption:1800:4,jump_boost:1800:2,haste:1800:2,fire_resistance:1800,night_vision:1800,dolphins_grace:1800")}],
+[3,"Съедобный тотем","Тотем, который едят. Тот, что держат в руке, всё ещё работает.",function(){return eat("totem_of_undying","Съедобный тотем",0,0,"regeneration:800:1,fire_resistance:800,absorption:100:1")}],
+[3,"Алмаз-тотем","Спасает от смерти, как тотем, прямо из инвентаря. Стакается по 64.",function(){return 'minecraft:diamond[minecraft:death_protection={death_effects:[{type:"minecraft:clear_all_effects"},{type:"minecraft:apply_effects",effects:['+fx("regeneration:800:1,fire_resistance:800,absorption:100:1")+']}]},custom_name={"text":"Алмаз-тотем"}] 64'}]
+];
+function m(c,t,x,d){D.push([c,t,d,function(){return x}])}
+/* %N = ник, <...> = подставь своё значение */
+m(4,"Режим игры","/gamemode creative %N","Меняет режим игры (creative, survival, adventure, spectator). Короткие: /gmc /gms /gma /gmsp.");
+m(4,"Полёт","/fly %N","Включает или выключает полёт без элитры.");
+m(4,"Бессмертие","/god %N","Режим бога: не получаешь урон.");
+m(4,"Вылечить","/heal %N","Полностью восстанавливает здоровье.");
+m(4,"Накормить","/feed %N","Полностью восстанавливает голод.");
+m(4,"Выдать предмет","/item diamond 64","Выдаёт предмет (то же, что /i). Можно /give %N diamond 64.");
+m(4,"Скорость","/speed 5","Скорость ходьбы или полёта от 1 до 10.");
+m(4,"Невидимка","/vanish","Скрывает тебя от других игроков.");
+m(4,"Телепорт к игроку","/tp <игрок>","Телепортирует тебя к игроку. /tphere <игрок> тянет его к тебе.");
+m(4,"Запрос телепорта","/tpa <игрок>","Просит игрока телепортировать тебя к нему. Он отвечает /tpaccept или /tpdeny.");
+m(4,"Дом","/sethome <имя>","Запоминает точку дома. Вернуться: /home <имя>, удалить: /delhome <имя>.");
+m(4,"Варпы","/setwarp <имя>","Создаёт общую точку телепорта. Идти: /warp <имя>, удалить: /delwarp <имя>.");
+m(4,"Назад","/back","Возвращает на место последнего телепорта или смерти.");
+m(4,"Набор","/kit <название>","Выдаёт готовый набор предметов. Список наборов: /kit.");
+m(4,"Починить","/repair all","Чинит предмет в руке (hand) или все предметы (all).");
+m(4,"Шапка","/hat","Надевает предмет из руки на голову.");
+m(4,"Время и погода","/time day","Ставит время суток. Погода: /weather clear.");
+m(4,"Сообщение","/msg <игрок> <текст>","Личное сообщение. Ответить: /r <текст>.");
+m(4,"Ник","/nick <новый ник>","Меняет отображаемое имя в чате.");
+m(4,"Инвентарь игрока","/invsee <игрок>","Открывает инвентарь игрока. Сундук Края: /enderchest <игрок>.");
+m(4,"Очистить инвентарь","/clearinventory %N","Удаляет все предметы из инвентаря (или /ci).");
+m(4,"Кик","/kick <игрок> <причина>","Выгоняет игрока с сервера.");
+m(4,"Бан","/ban <игрок> <причина>","Банит навсегда. На время: /tempban <игрок> 1d. Разбан: /unban <игрок>.");
+m(4,"Мут","/mute <игрок> 10m","Запрещает писать в чат (время необязательно).");
+m(4,"Объявление","/broadcast <текст>","Отправляет сообщение всем игрокам.");
+m(4,"Кто онлайн","/list","Список игроков на сервере. Когда был игрок: /seen <ник>.");
+m(4,"Деньги","/balance","Показывает баланс. Перевод: /pay <игрок> <сумма>.");
+m(4,"Перезагрузка","/essentials reload","Перезагружает настройки EssentialsX.");
+m(5,"Спавн","/spawn","Телепортирует на точку спавна.");
+m(5,"Поставить спавн","/setspawn","Ставит спавн на твоём месте.");
+m(5,"Спавн для группы","/setspawn newbies","Отдельный спавн для группы (например, новичков).");
+m(6,"Веб-редактор","/lp editor","Даёт ссылку на удобный сайт для настройки прав.");
+m(6,"Создать группу","/lp creategroup <группа>","Новая группа прав (например, vip). Удалить: /lp deletegroup <группа>.");
+m(6,"Игрока в группу","/lp user %N parent set <группа>","Делает группу единственной у игрока. Добавить ещё одну: parent add.");
+m(6,"Убрать из группы","/lp user %N parent remove <группа>","Убирает игрока из группы.");
+m(6,"Право игроку","/lp user %N permission set <право> true","Выдаёт право. Убрать: permission unset <право>.");
+m(6,"Право группе","/lp group <группа> permission set <право> true","Выдаёт право всей группе.");
+m(6,"Временное право","/lp user %N permission settemp <право> true 1d","Право на время (1d = сутки, 1h = час).");
+m(6,"Префикс группы",'/lp group <группа> meta setprefix 100 "&c[Админ] "',"Задаёт префикс перед ником в чате. 100 — приоритет.");
+m(6,"Инфо об игроке","/lp user %N info","Показывает группы и права игрока. У группы: /lp group <группа> info.");
+m(6,"Проверить право","/lp user %N permission check <право>","Есть ли у игрока такое право.");
+m(6,"Список групп","/lp listgroups","Все группы на сервере.");
+m(6,"Синхронизация","/lp sync","Обновляет данные прав из базы.");
+m(7,"Палочка","//wand","Выдаёт топор-палочку: ЛКМ — точка 1, ПКМ — точка 2.");
+m(7,"Точки","//pos1","Ставит первую точку выделения на твоём месте. Вторая: //pos2.");
+m(7,"Расширить выделение","//expand 10 up","Увеличивает выделение на 10 блоков вверх. Сбросить: //sel.");
+m(7,"Заполнить","//set stone","Заполняет выделение блоком.");
+m(7,"Заменить","//replace dirt grass_block","Заменяет один блок другим в выделении.");
+m(7,"Стены","//walls stone","Строит только стены по границе выделения.");
+m(7,"Копировать и вставить","//copy","Копирует выделение. Вставить на своём месте: //paste. Вырезать: //cut.");
+m(7,"Отмена","//undo","Отменяет последнее действие. Вернуть: //redo.");
+m(7,"Сфера","//sphere stone 10","Сплошная сфера радиусом 10. Полая: //hsphere stone 10.");
+m(7,"Цилиндр","//cyl stone 10 5","Цилиндр радиусом 10 и высотой 5. Полый: //hcyl.");
+m(7,"Повторить","//stack 5 up","Дублирует выделение 5 раз вверх.");
+m(7,"Сдвинуть","//move 5 up","Двигает выделение на 5 блоков вверх.");
+m(7,"Повернуть","//rotate 90","Поворачивает буфер копирования. Отразить: //flip.");
+m(7,"Кисть","//brush sphere stone 5","Кисть-сфера на предмете в руке. Убрать: //brush none.");
+m(7,"Осушить","//drain 20","Убирает воду и лаву в радиусе 20.");
+m(7,"Схематика","//schem save <имя>","Сохраняет копию в файл. Загрузить: //schem load <имя>.");
+m(7,"Подсчёт блоков","//count stone","Считает блоки в выделении. Размер: //size.");
+m(8,"Создать регион","/rg define <регион>","Делает регион из выделения WorldEdit (//pos1, //pos2). Перевыделить: /rg redefine.");
+m(8,"Заявить участок","/rg claim <регион>","Создаёт регион игроку, если ему разрешили.");
+m(8,"Участник","/rg addmember <регион> <игрок>","Может строить в регионе. Убрать: /rg removemember.");
+m(8,"Владелец","/rg addowner <регион> <игрок>","Владелец региона. Убрать: /rg removeowner.");
+m(8,"Запретить PvP","/rg flag <регион> pvp deny","Запрещает драки в регионе. allow — разрешает.");
+m(8,"Запретить строить","/rg flag <регион> build deny","Чужие не ломают и не ставят блоки.");
+m(8,"Запретить мобов","/rg flag <регион> mob-spawning deny","Мобы не появляются в регионе.");
+m(8,"Без взрывов","/rg flag <регион> creeper-explosion deny","Крипер не повреждает блоки.");
+m(8,"Приветствие","/rg flag <регион> greeting <текст>","Сообщение при входе в регион.");
+m(8,"Весь мир","/rg flag __global__ pvp deny","Флаг на весь мир сразу.");
+m(8,"Инфо о регионе","/rg info <регион>","Владельцы, участники и флаги. Без имени — регион под тобой.");
+m(8,"Список регионов","/rg list","Показывает все регионы.");
+m(8,"Выделить регион","/rg select <регион>","Выделяет границы региона в WorldEdit.");
+m(8,"Удалить регион","/rg remove <регион>","Удаляет регион.");
+m(8,"Стоп-лаг","/stoplag","Отключает физику воды, лавы и огня. Включить снова: /stoplag -c.");
+m(8,"Перезагрузка","/wg reload","Перезагружает настройки WorldGuard.");
+m(9,"Вкл/выкл PvP","/pvp","Включает или выключает PvP для тебя.");
+m(9,"Информация","/pvpinfo","Показывает твой статус PvP.");
+m(9,"Список","/pvplist","Кто сейчас с включённым PvP.");
+m(9,"Обход защиты","/pvpo","Админ может бить игроков с выключенным PvP.");
+m(9,"Защита новичка","/newbie disable","Снимает защиту новичка.");
+m(9,"Перезагрузка","/pvpmanager reload","Перезагружает настройки PvPManager.");
+m(10,"Убрать предметы","/lagg clear","Удаляет предметы с земли. Плагин делает это и сам по таймеру.");
+m(10,"Убрать мобов","/lagg killmobs","Убивает мобов (кроме защищённых).");
+m(10,"Освободить память","/lagg gc","Запускает сборку мусора и показывает расход памяти.");
+m(10,"TPS","/lagg tps","Показывает частоту тиков сервера (идеально 20).");
+m(10,"Проверка","/lagg check","Считает сущности и тайлы в мире.");
+m(10,"Поиск лага","/lagg area","Находит чанки с самым большим числом сущностей.");
+m(10,"Пинг","/lagg ping","Показывает твой пинг.");
+m(10,"Заморозка","/lagg halt","Приостанавливает работу сервера. Повтор — продолжить.");
+m(10,"Перезагрузка","/lagg reload","Перезагружает настройки ClearLag.");
+m(11,"Случайный телепорт","/rtp","Телепортирует в случайное место мира. Остальное — в конфиге плагина.");
+m(12,"Поставить скин","/skin set <ник>","Ставит скин лицензионного игрока. Обновить: /skin update.");
+m(12,"Скин по ссылке","/skin url <ссылка>","Ставит скин из ссылки на картинку PNG.");
+m(12,"Сбросить скин","/skin clear","Возвращает твой скин.");
+m(12,"Меню скинов","/skins","Открывает меню выбора скина.");
+m(12,"Скин другому","/skin set <ник скина> <игрок>","Админ ставит скин игроку.");
+m(12,"Перезагрузка","/sr reload","Перезагружает настройки SkinsRestorer.");
+m(13,"Открыть аукцион","/pa","Открывает меню аукциона. Подсказка: /pa help.");
+m(13,"Выставить лот","/pa sell <цена>","Продаёт предмет из руки за указанную цену.");
+m(14,"Проверка игрока","/check <игрок>","Вызывает игрока на проверку (на читы). Подсказка: /check help.");
+/* Ваниль. Если плагин (Essentials) перехватывает команду, пиши с префиксом: /minecraft:tp */
+m(15,"Режим игры","/gamemode creative %N","Меняет режим: survival, creative, adventure, spectator.");
+m(15,"Эффект","/effect give %N minecraft:speed 300 2 true","Даёт эффект: ID, секунды, уровень (0 = I), true = без частиц. Бесконечный: infinite.");
+m(15,"Снять эффекты","/effect clear %N","Убирает все эффекты (или один: добавь его ID).");
+m(15,"Опыт","/xp add %N 30 levels","Даёт уровни (или points — очки). Узнать: /xp query %N levels.");
+m(15,"Телепорт","/tp %N ~ ~10 ~","Телепорт по координатам. ~ — относительно тебя. К игроку: /tp %N <игрок>.");
+m(15,"Точка возрождения","/spawnpoint %N ~ ~ ~","Ставит точку возрождения игроку.");
+m(15,"Выдать предмет","/give %N minecraft:diamond 64","Выдаёт предмет и количество.");
+m(15,"Очистить инвентарь","/clear %N","Забирает все предметы. Один тип: /clear %N minecraft:dirt.");
+m(15,"Зачаровать","/enchant %N minecraft:sharpness 5","Зачаровывает предмет в руке (если зачарование ему подходит).");
+m(15,"Размер игрока","/attribute %N minecraft:scale base set 2","Делает игрока в 2 раза больше. Вернуть: set 1.");
+m(15,"Здоровье","/attribute %N minecraft:max_health base set 40","Максимум здоровья (40 = 20 сердец). В старых версиях: minecraft:generic.max_health.");
+m(15,"Убить","/kill %N","Убивает игрока.");
+m(15,"Заголовок",'/title %N title {"text":"Привет","color":"gold"}',"Большая надпись по центру экрана. Подзаголовок: subtitle.");
+m(15,"Звук","/playsound minecraft:entity.player.levelup master %N","Проигрывает звук игроку.");
+m(15,"Частицы","/particle minecraft:heart ~ ~1 ~ 1 1 1 0 20","Показывает частицы (сердечки) вокруг точки.");
+m(15,"Теги","/tag %N add vip","Ставит метку игроку. Потом удобно: @a[tag=vip]. Убрать: remove.");
+m(16,"Время","/time set day","day, noon, night, midnight или число. Сдвинуть: /time add 1000.");
+m(16,"Погода","/weather clear","clear — ясно, rain — дождь, thunder — гроза. Можно добавить время в секундах.");
+m(16,"Сложность","/difficulty hard","peaceful, easy, normal, hard.");
+m(16,"Сохранять инвентарь","/gamerule keepInventory true","Предметы не пропадают после смерти. В новых версиях (1.21.11+) правило называется keep_inventory.");
+m(16,"Мобы не ломают","/gamerule mobGriefing false","Криперы и эндермены не портят блоки (в новых версиях: mob_griefing).");
+m(16,"Не менять день","/gamerule doDaylightCycle false","Останавливает смену дня и ночи (в новых версиях: advance_time).");
+m(16,"Спавн мира","/setworldspawn","Ставит общий спавн мира на твоём месте.");
+m(16,"Граница мира","/worldborder set 1000","Размер границы. Центр: /worldborder center 0 0. Плавно: set 2000 60 (за 60 сек).");
+m(16,"Сид","/seed","Показывает зерно мира.");
+m(16,"Найти структуру","/locate structure minecraft:village_plains","Показывает координаты ближайшей деревни. Другие: mansion, stronghold, ancient_city, trial_chambers.");
+m(16,"Найти биом","/locate biome minecraft:cherry_grove","Ищет ближайший биом.");
+m(16,"Загрузка чанков","/forceload add ~ ~","Чанк всегда загружен (ферма работает без тебя). Убрать: remove.");
+m(16,"Скорость игры","/tick rate 40","Ускоряет игру (20 — обычная). Заморозить: /tick freeze, вернуть: /tick unfreeze.");
+m(16,"Режим по умолчанию","/defaultgamemode survival","Режим игры для новых игроков.");
+m(17,"Поставить блок","/setblock ~ ~ ~ minecraft:diamond_block","Ставит один блок. replace — заменить, destroy — со сломом.");
+m(17,"Заполнить","/fill ~ ~ ~ ~10 ~5 ~10 minecraft:glass hollow","Заполняет область (не больше 32768 блоков). hollow — полая коробка.");
+m(17,"Очистить область","/fill ~ ~ ~ ~10 ~10 ~10 minecraft:air","Убирает все блоки в области.");
+m(17,"Копировать","/clone ~ ~ ~ ~5 ~5 ~5 ~10 ~ ~","Копирует область в другое место.");
+m(17,"Призвать моба","/summon minecraft:creeper ~ ~ ~ {powered:1b}","Создаёт моба. Здесь — заряженный крипер.");
+m(17,"Молния","/summon minecraft:lightning_bolt ~ ~ ~","Бьёт молнией.");
+m(17,"Динамит","/summon minecraft:tnt ~ ~ ~ {fuse:40}","Зажжённый TNT (40 тиков = 2 секунды).");
+m(17,"Убрать предметы","/kill @e[type=minecraft:item]","Удаляет все выброшенные предметы.");
+m(17,"Убить мобов","/kill @e[type=minecraft:zombie]","Убивает всех зомби. Замени тип на любого моба.");
+m(17,"Притянуть предметы","/tp @e[type=minecraft:item,distance=..50] %N","Телепортирует предметы в радиусе 50 блоков к тебе.");
+m(17,"Лут","/loot give %N loot minecraft:chests/end_city_treasure","Выдаёт содержимое сундука из таблицы лута.");
+m(17,"Структура","/place structure minecraft:mansion ~ ~ ~","Строит структуру на этом месте.");
+m(17,"Молния на всех","/execute as @a at @s run summon minecraft:lightning_bolt ~ ~ ~","execute запускает команду от имени игроков: каждого бьёт молнией.");
+m(17,"Админ-блоки","/give %N minecraft:command_block","Командный блок. Ещё: barrier, light, structure_block, debug_stick.");
+m(17,"Данные сущности","/data get entity %N Pos","Показывает координаты игрока (или любые NBT-данные).");
+m(18,"Выдать оператора","/op %N","Даёт права оператора. Забрать: /deop %N.");
+m(18,"Белый список","/whitelist add <игрок>","Добавляет в белый список. Включить: /whitelist on.");
+m(18,"Бан и разбан","/ban <игрок> <причина>","Банит игрока. Разбан: /pardon <игрок>. По IP: /ban-ip.");
+m(18,"Кик","/kick <игрок> <причина>","Выгоняет игрока с сервера.");
+m(18,"Сохранить мир","/save-all","Принудительно сохраняет мир на диск.");
+m(18,"Остановить сервер","/stop","Сохраняет мир и выключает сервер.");
+m(18,"Сообщение всем",'/tellraw @a {"text":"Рестарт через 5 минут!","color":"red"}',"Красивое сообщение с цветом в чат всем. Простое: /say <текст>.");
+m(18,"Достижения","/advancement grant %N everything","Выдаёт все достижения. Забрать: revoke.");
+m(18,"Рецепты","/recipe give %N *","Открывает все рецепты в книге.");
+m(18,"Счёт","/scoreboard objectives add kills playerKillCount","Создаёт счётчик убийств игроков. Показать сбоку: /scoreboard objectives setdisplay sidebar kills.");
+m(18,"Команда игроков","/team add red","Создаёт команду. Добавить: /team join red <игрок>, цвет: /team modify red color red.");
+m(18,"Датапаки","/datapack list","Список датапаков. Включить: /datapack enable \"file/имя\". Применить: /reload.");
+m(18,"Перезагрузка данных","/reload","Перечитывает датапаки и функции (плагины не трогает).");
+CATS.push(["Ваниль: execute и данные","⚙️"],["Ваниль: прочее","📦"]);
+m(19,"Селекторы","/say @a[distance=..10,gamemode=survival,limit=3,sort=nearest]","Селекторы: @p ближайший, @a все игроки, @r случайный, @e все сущности, @s сам исполнитель, @n ближайшая сущность. В [ ] фильтры: type, name, tag, distance, gamemode, limit, sort, level, team, scores, nbt.");
+m(19,"Если есть сущность","/execute if entity @a[distance=..5] run say Кто-то рядом","execute if/unless проверяет условие и только тогда запускает команду после run. Проверки: entity, block, blocks, score, data, biome, dimension, predicate.");
+m(19,"Если блок","/execute if block ~ ~-1 ~ minecraft:diamond_block run say Алмаз!","Проверяет блок в точке.");
+m(19,"От имени и в точке","/execute as @a at @s run particle minecraft:flame ~ ~1 ~ 0 0 0 0 10","as меняет исполнителя, at меняет место, откуда считаются координаты.");
+m(19,"Другое измерение","/execute in minecraft:the_nether run tp %N 0 100 0","in выполняет команду в другом мире: overworld, the_nether, the_end.");
+m(19,"Сдвиг и направление","/execute anchored eyes positioned ^ ^ ^3 run particle minecraft:flame ~ ~ ~ 0 0 0 0 1","anchored, positioned, rotated, facing, align двигают точку и направление. ^ ^ ^3 значит 3 блока вперёд по взгляду.");
+m(19,"Связанная сущность","/execute as %N on vehicle run say Я транспорт","on переходит к связанной сущности: vehicle, passengers, owner, target, attacker и др.");
+m(19,"Записать результат","/execute store result score %N kills run clear %N minecraft:diamond 0","store кладёт результат команды в счёт, bossbar или NBT. Здесь считает алмазы в инвентаре.");
+m(19,"Читать данные","/data get entity %N Health","data get показывает NBT-данные сущности, блока (block) или хранилища (storage).");
+m(19,"Слить данные","/data merge entity @e[type=minecraft:pig,limit=1,sort=nearest] {NoAI:1b}","Меняет NBT-данные. Здесь свинья перестаёт двигаться.");
+m(19,"Изменить данные","/data modify storage mypack:x value 5","data modify умеет set, append, prepend, insert, merge. Хранилище storage нужно для датапаков.");
+m(19,"Удалить данные","/data remove entity @e[type=minecraft:pig,limit=1,sort=nearest] NoAI","Убирает тег из NBT.");
+m(19,"Создать счёт","/scoreboard objectives add money dummy","Новый счётчик. Типы: dummy, trigger, health, level, playerKillCount, deathCount и др. Удалить: objectives remove. Список: objectives list.");
+m(19,"Показать счёт","/scoreboard objectives setdisplay sidebar money","Показывает счёт справа. Другие места: list (в табе), belowName.");
+m(19,"Значение счёта","/scoreboard players set %N money 100","set задаёт, add прибавляет, remove отнимает, get показывает, reset сбрасывает.");
+m(19,"Математика счёта","/scoreboard players operation %N money += @a money","operation: += -= *= /= %= = < > ><. Считает между счётами.");
+m(19,"Триггер","/trigger mytrigger set 1","Игрок сам запускает счёт типа trigger без прав оператора. Разрешить: /scoreboard players enable %N mytrigger.");
+m(19,"Команды: управление","/team modify red color red","modify меняет цвет, префикс, огонь по своим (friendlyFire), видимость ников. Убрать: /team leave <игрок>, /team empty red, /team remove red, /team list.");
+m(19,"Список тегов","/tag %N list","Показывает все теги игрока.");
+m(19,"Боссбар",'/bossbar add mybar {"text":"Босс"}',"Создаёт полоску босса. Дальше: /bossbar set minecraft:mybar players @a, value 50, max 100, color red, style notched_10, visible true. Удалить: remove.");
+m(19,"Предмет в слот","/item replace entity %N weapon.mainhand with minecraft:diamond_sword","Кладёт предмет в слот: weapon.mainhand, armor.head, hotbar.0, container.5, weapon.offhand. Блок: /item replace block ~ ~ ~ container.0 with ...");
+m(19,"Изменить предмет","/item modify entity %N weapon.mainhand minecraft:my_modifier","Применяет модификатор предмета из датапака.");
+m(19,"Функция","/function mypack:start","Запускает функцию датапака (набор команд).");
+m(19,"Отложить","/schedule function mypack:loop 5s append","Запустит функцию через 5 секунд. clear убирает отложенное.");
+m(19,"Случайное число","/random value 1..100","Выдаёт случайное число. roll делает то же скрытым для чата. reset сбрасывает последовательность.");
+m(19,"Вернуть значение","/return 1","Выход из функции с результатом. Бывает return run <команда> и return fail.");
+m(19,"Урон","/damage %N 5 minecraft:magic","Наносит урон с типом (magic, fire, fall, explosion). Можно by <сущность>.");
+m(19,"Сменить биом","/fillbiome ~-10 ~ ~-10 ~10 ~ ~10 minecraft:desert","Меняет биом в области. Перезайди, чтобы увидеть.");
+m(19,"Посадить верхом","/ride %N mount @e[type=minecraft:pig,limit=1,sort=nearest]","Сажает сущность на другую. Слезть: /ride %N dismount.");
+m(19,"Повернуть","/rotate %N 90 0","Поворачивает сущность. Можно facing entity <цель>.");
+m(19,"Разбросать","/spreadplayers 0 0 10 100 false @a","Разбрасывает игроков по области. Формат: центр X Z, мин. расстояние, радиус, команды (true/false).");
+m(19,"Телепорт с поворотом","/tp %N 0 100 0 facing 0 64 0","Телепорт с направлением взгляда. Или: /tp %N 0 100 0 90 0.");
+m(19,"Наблюдать","/spectate @e[type=minecraft:pig,limit=1,sort=nearest] %N","Режим наблюдателя глазами сущности. Выйти: Shift.");
+m(19,"Остановить звук","/stopsound %N music","Глушит звук по категории (music, master, ambient) или названию.");
+m(19,"Полоска над хотбаром",'/title %N actionbar {"text":"Привет"}',"Текст над хотбаром. Время: /title %N times 10 70 20. Убрать: clear, сбросить: reset.");
+m(20,"Помощь","/help","Список команд. Подробнее: /help gamemode.");
+m(20,"Личное сообщение","/msg %N Привет","Алиасы: /tell, /w. Командное сообщение: /teammsg <текст> (или /tm).");
+m(20,"Действие","/me танцует","Пишет в чат «* ник танцует».");
+m(20,"Список игроков","/list uuids","Кто онлайн, с UUID.");
+m(20,"Список банов","/banlist players","Показывает забаненных. ips — по IP.");
+m(20,"Бан по IP","/ban-ip <ip> <причина>","Банит IP. Разбан: /pardon-ip <ip>.");
+m(20,"Белый список","/whitelist list","Также: remove, on, off, reload.");
+m(20,"Забрать оператора","/deop %N","Снимает права оператора.");
+m(20,"Таймаут AFK","/setidletimeout 30","Кикать игроков после 30 минут бездействия. 0 отключает.");
+m(20,"Автосохранение","/save-off","Выключает автосохранение (для бэкапа). Включить: /save-on.");
+m(20,"Для LAN","/publish","Открывает одиночный мир для друзей по локальной сети.");
+m(20,"Перевести на сервер","/transfer <хост> <порт>","Переводит игрока на другой сервер.");
+m(20,"Шаг игры","/tick step 20","Прокручивает 20 тиков при заморозке. Ещё: /tick sprint 1000, /tick query.");
+m(20,"Диалог","/dialog show %N <диалог>","Открывает игроку окно-диалог (новые версии 1.21.6+). Закрыть: /dialog clear.");
+m(20,"Метки на карте","/waypoint list","Список путевых точек локатора (1.21.6+).");
+m(20,"Профилирование","/perf start","Замер производительности сервера. Остановить: /perf stop.");
+m(20,"JFR","/jfr start","Запись профиля Java Flight Recorder. Остановить: /jfr stop.");
+m(20,"Отладка","/debug start","Запускает отладочный профайлер. Остановить: /debug stop.");
+m(20,"Тесты","/test run all","Игровые тесты (для разработчиков, 1.21.5+).");
+m(20,"Правило игры","/gamerule doMobSpawning false","gamerule без значения показывает текущее. Популярные: doMobSpawning, doFireTick, fallDamage, naturalRegeneration, commandBlockOutput, playersSleepingPercentage, randomTickSpeed, spawnRadius, maxEntityCramming. В 1.21.11+ имена в snake_case.");
+m(20,"Заливка: режимы","/fill ~ ~ ~ ~5 ~5 ~5 minecraft:stone outline","Режимы fill: replace (заменить, можно с фильтром), keep, outline, hollow, destroy. Пример: ... minecraft:air replace minecraft:stone.");
+m(20,"Клон: режимы","/clone ~ ~ ~ ~5 ~5 ~5 ~10 ~ ~ masked move","Режимы: replace, masked, filtered; move удаляет оригинал, force и normal.");
+m(20,"Лут с точки","/loot spawn ~ ~ ~ mine ~ ~-1 ~ minecraft:diamond_pickaxe","loot spawn/insert/replace/give с источниками: loot, kill, mine, fish.");
+m(20,"Шаблон структуры","/place template minecraft:igloo/top ~ ~ ~","Ещё: place feature (дерево), place jigsaw, place structure.");
+m(20,"Моб с данными","/summon minecraft:zombie ~ ~ ~ {IsBaby:1b,NoAI:1b}","Моб с NBT: малыш без ИИ. Стойка: /summon minecraft:armor_stand ~ ~ ~ {ShowArms:1b}.");
+m(20,"Меч с чарами","/give %N minecraft:diamond_sword[minecraft:enchantments={\"minecraft:sharpness\":5}] 1","Предмет с компонентами в [ ]: enchantments, custom_name, lore, unbreakable, attribute_modifiers. Это формат версий 1.21+.");
+function cmd(i){var b=D[i][3]();return b.charAt(0)=="/"?b.split("%N").join(NICK):"/minecraft:give @a[name="+NICK+"] "+b}
+var cur=-1,qs="";
+function flash(b,t){var o=b.textContent;b.textContent=t;b.classList.add("ok");setTimeout(function(){b.textContent=o;b.classList.remove("ok")},1400)}
+function copy(t,b){
+function fb(){var a=document.createElement("textarea");a.value=t;a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();try{document.execCommand("copy");flash(b,"Скопировано ✓")}catch(e){flash(b,"Ошибка")}a.remove()}
+try{navigator.clipboard.writeText(t).then(function(){flash(b,"Скопировано ✓")},fb)}catch(e){fb()}}
+function render(){
+var L=document.getElementById("list");L.innerHTML="";var n=0;
+CATS.forEach(function(c,ci){
+if(cur>=0&&cur!==ci)return;
+var idx=[];D.forEach(function(d,i){if(d[0]===ci&&d[1].toLowerCase().indexOf(qs)>-1)idx.push(i)});
+if(!idx.length)return;n+=idx.length;
+var s=document.createElement("div");s.className="sec";
+s.innerHTML="<h2>"+c[1]+" "+c[0]+" ("+idx.length+")</h2>";
+var all=document.createElement("button");all.className="btn s";all.textContent="Копировать все";
+all.onclick=function(){copy(idx.map(cmd).join("\n"),all)};
+s.appendChild(all);L.appendChild(s);
+idx.forEach(function(i){
+var k=document.createElement("div");k.className="card";
+var h=document.createElement("h3");h.textContent=D[i][1];
+var p=document.createElement("p");p.textContent=D[i][2];
+var pre=document.createElement("pre");var cm=cmd(i);pre.textContent=cm;
+var b=document.createElement("button");b.className="btn";b.textContent="Копировать";
+b.onclick=function(){copy(cm,b)};
+k.appendChild(h);k.appendChild(p);k.appendChild(pre);k.appendChild(b);L.appendChild(k)})});
+if(!n)L.innerHTML='<div class="empty">Ничего не найдено</div>'}
+var T=document.getElementById("tabs");
+[["Все","",-1]].concat(CATS.map(function(c,i){return [c[0],c[1],i]})).forEach(function(t){
+var b=document.createElement("button");b.className="tab"+(t[2]===-1?" on":"");b.textContent=(t[1]?t[1]+" ":"")+t[0];
+b.onclick=function(){cur=t[2];[].forEach.call(T.children,function(x){x.classList.remove("on")});b.classList.add("on");render()};
+T.appendChild(b)});
+document.getElementById("q").oninput=function(){qs=this.value.toLowerCase().trim();render()};
+document.getElementById("nick").oninput=function(){NICK=this.value.trim()||"fdvh_7th7";render()};
+render();
+</script>
+</body>
+</html>
